@@ -67,6 +67,6 @@ describe('POST /users - Registro de usuário', () => {
       .post('/users')
       .send({ name: 'John Doe', email: 'isso-nao-e-um-email' });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(409);
   });
 });
