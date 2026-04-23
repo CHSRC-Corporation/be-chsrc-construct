@@ -10,10 +10,6 @@ beforeAll(async () => {
   await AppDataSource.initialize();
 });
 
-afterAll(async () => {
-  await AppDataSource.destroy();
-});
-
 afterEach(async () => {
   await AppDataSource.getRepository(User).clear();
 });
