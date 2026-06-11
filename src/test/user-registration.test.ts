@@ -1,21 +1,28 @@
-import { beforeAll, afterAll, afterEach, describe, it, expect } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import supertest from 'supertest';
 import { app } from '../app';
-import { AppDataSource } from '../config/data-source';
-import { User } from '../entities/User';
+import {
+  clearTestState,
+  setupTestDatabase,
+  teardownTestDatabase,
+} from './test-utils';
 
 const request = supertest(app);
 
 beforeAll(async () => {
-  await AppDataSource.initialize();
+  await setupTestDatabase();
 });
 
 afterEach(async () => {
-  await AppDataSource.getRepository(User).clear();
+  await clearTestState();
 });
 
-describe('POST /users - Registro de usuário', () => {
-  it('deve registrar um usuário com dados válidos', async () => {
+afterAll(async () => {
+  await teardownTestDatabase();
+});
+
+describe('POST /users - user registration', () => {
+  it('registers a user with valid data', async () => {
     const res = await request
       .post('/users')
       .send({ name: 'John Doe', email: 'john@example.com' });
@@ -27,7 +34,7 @@ describe('POST /users - Registro de usuário', () => {
     expect(res.body.createdAt).toBeDefined();
   });
 
-  it('deve retornar 400 quando o nome estiver ausente', async () => {
+  it('returns 400 when name is missing', async () => {
     const res = await request
       .post('/users')
       .send({ email: 'john@example.com' });
@@ -36,20 +43,20 @@ describe('POST /users - Registro de usuário', () => {
     expect(res.body.message).toBe('name and email are required');
   });
 
-  it('deve retornar 400 quando o email estiver ausente', async () => {
+  it('returns 400 when email is missing', async () => {
     const res = await request.post('/users').send({ name: 'John Doe' });
 
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('name and email are required');
   });
 
-  it('deve retornar 400 quando o corpo estiver vazio', async () => {
+  it('returns 400 when body is empty', async () => {
     const res = await request.post('/users').send({});
 
     expect(res.status).toBe(400);
   });
 
-  it('deve retornar 409 quando o email já estiver cadastrado', async () => {
+  it('returns 409 when email already exists', async () => {
     await request
       .post('/users')
       .send({ name: 'John Doe', email: 'john@example.com' });
@@ -62,7 +69,7 @@ describe('POST /users - Registro de usuário', () => {
     expect(res.body.message).toBe('email already exists');
   });
 
-  it('deve retornar 400 quando o formato do email for inválido', async () => {
+  it('returns 400 when email format is invalid', async () => {
     const res = await request
       .post('/users')
       .send({ name: 'John Doe', email: 'isso-nao-e-um-email' });
