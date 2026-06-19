@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: be-chsrc-construct
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon            # pode trocar por ohio/virginia (mais perto do BR)
+    branch: main
+    autoDeploy: true          # deploy automatico a cada push na main
+    healthCheckPath: /health  # Render so promove o deploy se /health responder 200
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: DB_PATH
+        value: /data/app.db
+      - key: APP_VERSION
+        value: render
+      - key: LOG_LEVEL
+        value: info
+      - key: ENABLE_DEMO_INCIDENTS
+        value: "true"         # habilita as rotas de incidente para a demo
+    # disk:                   # requer plano pago. Descomente p/ persistir o SQLite entre deploys
+    #   name: sqlite-data
+    #   mountPath: /data
+    #   sizeGB: 1
