@@ -1,0 +1,38 @@
+databases:
+  - name: chsrc-db
+    plan: free
+    region: oregon            # mantenha igual ao da web service p/ conexao interna
+    databaseName: chsrc
+    user: chsrc
+
+services:
+  - type: web
+    name: be-chsrc-construct
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon            # pode trocar por ohio/virginia (mais perto do BR)
+    branch: main
+    autoDeploy: true          # deploy automatico a cada push na main
+    healthCheckPath: /health  # Render so promove o deploy se /health responder 200
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: DATABASE_URL    # connection string interna do Postgres gerenciado
+        fromDatabase:
+          name: chsrc-db
+          property: connectionString
+      - key: JWT_SECRET      # gerado e guardado pelo Render (nao versionado)
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 1d
+      - key: CORS_ORIGIN     # hosts liberados, separados por virgula (use "*" p/ liberar geral)
+        value: "*"           # troque pelo(s) dominio(s) do front, ex.: https://app.exemplo.com,https://exemplo.com
+      - key: APP_VERSION
+        value: render
+      - key: LOG_LEVEL
+        value: info
+      - key: ENABLE_DEMO_INCIDENTS
+        value: "true"         # habilita as rotas de incidente para a demo

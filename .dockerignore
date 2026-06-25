@@ -1,0 +1,11 @@
+.git
+.github
+node_modules
+dist
+coverage
+.env
+database.sqlite
+database.sqlite-*
+*.log
+Dockerfile
+docker-compose.yml
