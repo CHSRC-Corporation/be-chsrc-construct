@@ -52,8 +52,18 @@ Base local: `http://localhost:3000`
 | `POST` | `/incident` | Ativa incidente com `degraded`, `error` ou `slow` |
 | `DELETE` | `/incident` | Restaura o estado normal |
 | `GET` | `/incident/probe` | Rota para demonstrar erro ou lentidao controlada |
-| `GET` | `/users` | Lista usuarios |
-| `POST` | `/users` | Cria usuario |
+| `POST` | `/auth/register` | Cadastra usuario (nome, email, senha, repetir senha) e devolve um JWT |
+| `POST` | `/auth/login` | Autentica por email e senha e devolve um JWT |
+| `GET` | `/users` | Lista usuarios (**requer** `Authorization: Bearer <token>`) |
+| `GET` | `/users/me` | Dados do usuario autenticado (**requer** token) |
+
+## Autenticacao
+
+O cadastro e o login devolvem um JWT no campo `token`. O front-end armazena esse
+token no `localStorage` e o envia em cada requisicao protegida no header
+`Authorization: Bearer <token>`. A senha e gravada com hash (bcrypt) e nunca e
+retornada pela API. Defina `JWT_SECRET` (obrigatorio em producao) e, opcionalmente,
+`JWT_EXPIRES_IN` (padrao `1d`).
 
 Exemplos:
 
@@ -66,6 +76,19 @@ curl -X POST http://localhost:3000/incident \
   -d '{"mode":"degraded"}'
 curl -i http://localhost:3000/health
 curl -X DELETE http://localhost:3000/incident
+
+# Cadastro -> devolve { user, token }
+curl -X POST http://localhost:3000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Maria Silva","email":"maria@example.com","password":"senha12345","confirmPassword":"senha12345"}'
+
+# Login -> devolve { user, token }
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"maria@example.com","password":"senha12345"}'
+
+# Rota protegida (substitua <token> pelo JWT recebido)
+curl http://localhost:3000/users -H "Authorization: Bearer <token>"
 ```
 
 ## Docker
