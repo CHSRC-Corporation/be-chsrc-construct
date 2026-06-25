@@ -1,11 +1,16 @@
 import { Router } from 'express';
-import { isEmail } from 'validator';
 import { AppDataSource } from '../config/data-source';
 import { User } from '../entities/User';
+import {
+  authenticate,
+  type AuthenticatedRequest,
+} from '../middlewares/authenticate';
 
 const usersRouter = Router();
 
-usersRouter.get('/users', async (_req, res) => {
+// All user endpoints require a valid JWT (Bearer token in the Authorization
+// header). Registration/login live in the public /auth routes.
+usersRouter.get('/users', authenticate, async (_req, res) => {
   const usersRepository = AppDataSource.getRepository(User);
   const users = await usersRepository.find({
     order: { createdAt: 'DESC' },
@@ -14,28 +19,17 @@ usersRouter.get('/users', async (_req, res) => {
   return res.status(200).json(users);
 });
 
-usersRouter.post('/users', async (req, res) => {
-  const { name, email } = req.body as { name?: string; email?: string };
-
-  if (!name || !email) {
-    return res.status(400).json({ message: 'name and email are required' });
-  }
-
-  if (!isEmail(email)) {
-    return res.status(400).json({ message: 'invalid email format' });
-  }
+usersRouter.get('/users/me', authenticate, async (req, res) => {
+  const { user: tokenUser } = req as AuthenticatedRequest;
 
   const usersRepository = AppDataSource.getRepository(User);
-  const existingUser = await usersRepository.findOne({ where: { email } });
+  const user = await usersRepository.findOne({ where: { id: tokenUser?.sub } });
 
-  if (existingUser) {
-    return res.status(409).json({ message: 'email already exists' });
+  if (!user) {
+    return res.status(404).json({ message: 'user not found' });
   }
 
-  const user = usersRepository.create({ name, email });
-  const savedUser = await usersRepository.save(user);
-
-  return res.status(201).json(savedUser);
+  return res.status(200).json(user);
 });
 
 export { usersRouter };

@@ -1,3 +1,10 @@
+databases:
+  - name: chsrc-db
+    plan: free
+    region: oregon            # mantenha igual ao da web service p/ conexao interna
+    databaseName: chsrc
+    user: chsrc
+
 services:
   - type: web
     name: be-chsrc-construct
@@ -13,15 +20,19 @@ services:
         value: production
       - key: PORT
         value: "3000"
-      - key: DB_PATH
-        value: /data/app.db
+      - key: DATABASE_URL    # connection string interna do Postgres gerenciado
+        fromDatabase:
+          name: chsrc-db
+          property: connectionString
+      - key: JWT_SECRET      # gerado e guardado pelo Render (nao versionado)
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 1d
+      - key: CORS_ORIGIN     # hosts liberados, separados por virgula (use "*" p/ liberar geral)
+        value: "*"           # troque pelo(s) dominio(s) do front, ex.: https://app.exemplo.com,https://exemplo.com
       - key: APP_VERSION
         value: render
       - key: LOG_LEVEL
         value: info
       - key: ENABLE_DEMO_INCIDENTS
         value: "true"         # habilita as rotas de incidente para a demo
-    # disk:                   # requer plano pago. Descomente p/ persistir o SQLite entre deploys
-    #   name: sqlite-data
-    #   mountPath: /data
-    #   sizeGB: 1
