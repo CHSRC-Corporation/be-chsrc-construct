@@ -37,15 +37,19 @@ describe('CORS - CORS_ORIGIN allowlist', () => {
     );
   });
 
-  it('blocks an origin not in the list when in production', async () => {
+  it('allows any origin even in production (wildcard mode)', async () => {
     process.env.NODE_ENV = 'production';
     process.env.CORS_ORIGIN = 'https://app.exemplo.com';
 
     const res = await request
       .get('/version')
-      .set('Origin', 'https://nao-autorizado.com');
+      .set('Origin', 'https://qualquer-outra.com');
 
-    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+    // O middleware esta configurado em modo curinga ("*"), entao reflete
+    // qualquer origem mesmo em producao.
+    expect(res.headers['access-control-allow-origin']).toBe(
+      'https://qualquer-outra.com',
+    );
   });
 
   it('answers the CORS preflight (OPTIONS) for an allowed origin', async () => {
