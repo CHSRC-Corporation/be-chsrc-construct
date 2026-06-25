@@ -42,6 +42,15 @@ describe('POST /auth/register - user registration', () => {
     expect(res.body.user.password).toBeUndefined();
   });
 
+  it('registers a user without confirmPassword (front-end payload)', async () => {
+    const { confirmPassword: _confirmPassword, ...frontendPayload } = validUser;
+    const res = await request.post('/auth/register').send(frontendPayload);
+
+    expect(res.status).toBe(201);
+    expect(res.body.user.email).toBe('john@example.com');
+    expect(typeof res.body.token).toBe('string');
+  });
+
   it('returns 400 when name is missing', async () => {
     const { name, ...rest } = validUser;
     const res = await request.post('/auth/register').send(rest);

@@ -16,12 +16,20 @@ const registerSchema = z
     name: z.string().trim().min(3, 'name must have at least 3 characters').max(120),
     email: z.string().trim().toLowerCase().email('invalid email format').max(120),
     password: z.string().min(8, 'password must have at least 8 characters').max(120),
-    confirmPassword: z.string(),
+    // A confirmação de senha é validada no front-end, então aqui é opcional.
+    // Quando enviada, ainda conferimos que bate (defesa extra, sem quebrar o
+    // contrato `{ name, email, password }` esperado pelo cliente).
+    confirmPassword: z.string().optional(),
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    path: ['confirmPassword'],
-    message: 'passwords do not match',
-  });
+  .refine(
+    (data) =>
+      data.confirmPassword === undefined ||
+      data.password === data.confirmPassword,
+    {
+      path: ['confirmPassword'],
+      message: 'passwords do not match',
+    },
+  );
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email('invalid email format'),
